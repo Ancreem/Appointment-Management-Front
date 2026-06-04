@@ -1,7 +1,142 @@
 /**
- * AppointmentFormPage — create / edit form, reused for both operations.
- * Full implementation in Stage 7 (T-65).
+ * AppointmentFormPage — create or edit an appointment.
+ *
+ * Mode detection: if :id is present in the route → edit mode, otherwise create.
+ *
+ * In edit mode, the existing appointment is fetched on mount and used to
+ * populate the form via initialValues. The users list is fetched for admins
+ * so the assignedUserId selector is populated.
  */
+import { useCallback, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import {
+  Alert,
+  Box,
+  Button,
+  Typography,
+} from '@mui/material'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import { useAppointments } from '@/hooks/useAppointments'
+import { useUsers } from '@/hooks/useUsers'
+import { useAuthContext } from '@/context/AuthContext'
+import { AppointmentForm } from '@/components/features/AppointmentForm'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import type { CreateAppointmentRequest } from '@/types/appointment'
+
 export default function AppointmentFormPage() {
-  return <div>Appointment Form — Stage 7</div>
+  const { id } = useParams<{ id: string }>()
+  const isEditMode = Boolean(id)
+
+  const navigate = useNavigate()
+  const { user } = useAuthContext()
+
+  const {
+    appointment,
+    loading: apptLoading,
+    error: apptError,
+    fetchById,
+    create,
+    update,
+    clearError: clearApptError,
+  } = useAppointments()
+
+  const {
+    users,
+    loading: usersLoading,
+    error: usersError,
+    fetchAll: fetchUsers,
+    clearError: clearUsersError,
+  } = useUsers()
+
+  const isAdmin = user?.role === 'ADMIN'
+  const currentUserId = user?.userId ?? ''
+
+  const loadData = useCallback(() => {
+    if (isEditMode && id) {
+      void fetchById(id)
+    }
+    if (isAdmin) {
+      void fetchUsers({ page: 0, size: 100 })
+    }
+  }, [isEditMode, id, isAdmin, fetchById, fetchUsers])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  async function handleSubmit(values: CreateAppointmentRequest) {
+    if (isEditMode && id) {
+      await update(id, values)
+    } else {
+      await create(values)
+    }
+    navigate('/appointments')
+  }
+
+  function handleCancel() {
+    navigate('/appointments')
+  }
+
+  const isLoading = apptLoading || usersLoading
+  const error = apptError ?? usersError
+
+  // Build initialValues from the fetched appointment in edit mode
+  const initialValues: Partial<CreateAppointmentRequest> =
+    isEditMode && appointment
+      ? {
+          title: appointment.title,
+          description: appointment.description,
+          startTime: appointment.startTime,
+          endTime: appointment.endTime,
+          assignedUserId: appointment.assignedUserId,
+        }
+      : {}
+
+  // In edit mode, wait until we have the appointment data before rendering the form
+  const showSpinner = isEditMode && apptLoading && !appointment
+
+  return (
+    <Box>
+      {/* Header */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={handleCancel}
+          sx={{ mr: 1 }}
+        >
+          Back
+        </Button>
+        <Typography variant="h5" fontWeight={600}>
+          {isEditMode ? 'Edit Appointment' : 'New Appointment'}
+        </Typography>
+      </Box>
+
+      {error && (
+        <Alert
+          severity="error"
+          sx={{ mb: 3 }}
+          onClose={() => {
+            clearApptError()
+            clearUsersError()
+          }}
+        >
+          {error}
+        </Alert>
+      )}
+
+      {showSpinner ? (
+        <LoadingSpinner />
+      ) : (
+        <AppointmentForm
+          initialValues={initialValues}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          users={users?.content ?? []}
+          isAdmin={isAdmin}
+          loading={isLoading}
+          currentUserId={currentUserId}
+        />
+      )}
+    </Box>
+  )
 }
