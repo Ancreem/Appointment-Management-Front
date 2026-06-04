@@ -1,19 +1,21 @@
 /**
  * Shared API types used across the application.
- * These mirror the backend ErrorResponse and PagedResponse shapes.
+ * These mirror the backend PageResponse and ErrorResponse shapes.
  */
 
-export interface ErrorResponse {
-  errorCode: string
-  message: string
-  timestamp: string
-  path: string
-}
-
-export interface PagedResponse<T> {
+export interface PageResponse<T> {
   content: T[]
   page: number
   size: number
   totalElements: number
   totalPages: number
+  last: boolean
+}
+
+export interface ErrorResponse {
+  status: number
+  error: string
+  message: string
+  timestamp: string
+  path: string
 }

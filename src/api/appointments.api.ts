@@ -4,22 +4,17 @@
 import apiClient from './client'
 import type {
   Appointment,
-  AppointmentFilters,
   CreateAppointmentRequest,
   UpdateAppointmentRequest,
-  PatchStatusRequest,
+  AppointmentStatusUpdate,
+  ListAppointmentsParams,
 } from '@/types/appointment'
-import type { PagedResponse } from '@/types/api'
-
-export interface ListAppointmentsParams extends AppointmentFilters {
-  page?: number
-  size?: number
-}
+import type { PageResponse } from '@/types/api'
 
 export const appointmentsApi = {
-  list(params: ListAppointmentsParams = {}): Promise<PagedResponse<Appointment>> {
+  getAll(params: ListAppointmentsParams = {}): Promise<PageResponse<Appointment>> {
     return apiClient
-      .get<PagedResponse<Appointment>>('/appointments', { params })
+      .get<PageResponse<Appointment>>('/appointments', { params })
       .then((res) => res.data)
   },
 
@@ -41,13 +36,13 @@ export const appointmentsApi = {
       .then((res) => res.data)
   },
 
-  patchStatus(id: string, data: PatchStatusRequest): Promise<Appointment> {
+  updateStatus(id: string, data: AppointmentStatusUpdate): Promise<Appointment> {
     return apiClient
       .patch<Appointment>(`/appointments/${id}/status`, data)
       .then((res) => res.data)
   },
 
-  delete(id: string): Promise<void> {
+  deleteById(id: string): Promise<void> {
     return apiClient
       .delete<void>(`/appointments/${id}`)
       .then(() => undefined)

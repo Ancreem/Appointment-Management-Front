@@ -1,6 +1,5 @@
 /**
  * Date utility helpers using dayjs.
- * Full implementation in Stage 6/7 when form pages need formatting.
  */
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
@@ -10,8 +9,8 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 /**
- * Formats an ISO-8601 date string to a human-readable local format.
- * Example: "2025-09-01T10:00:00Z" → "Sep 1, 2025 10:00 AM"
+ * Formats an ISO-8601 date string to a human-readable datetime.
+ * Example: "2026-06-05T10:00:00Z" → "Jun 5, 2026 10:00 AM"
  */
 export function formatDateTime(iso: string): string {
   return dayjs(iso).format('MMM D, YYYY h:mm A')
@@ -19,16 +18,19 @@ export function formatDateTime(iso: string): string {
 
 /**
  * Formats an ISO-8601 date string to a short date.
- * Example: "2025-09-01T10:00:00Z" → "Sep 1, 2025"
+ * Example: "2026-06-05T10:00:00Z" → "Jun 5, 2026"
  */
 export function formatDate(iso: string): string {
   return dayjs(iso).format('MMM D, YYYY')
 }
 
 /**
- * Converts a dayjs/Date object to an ISO-8601 string with timezone offset
- * suitable for the backend (OffsetDateTime).
+ * Converts a Date or date string to an ISO-8601 string suitable for the
+ * backend (OffsetDateTime). Keeps the local timezone offset.
  */
-export function toIsoString(date: Date | string): string {
+export function toISOString(date: Date | string): string {
   return dayjs(date).toISOString()
 }
+
+/** @deprecated Use toISOString instead */
+export const toIsoString = toISOString

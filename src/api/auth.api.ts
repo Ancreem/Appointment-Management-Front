@@ -3,7 +3,7 @@
  * All functions delegate to the shared Axios client which handles token refresh.
  */
 import apiClient from './client'
-import type { LoginRequest, AuthResponse } from '@/types/auth'
+import type { LoginRequest, AuthResponse, TokenRefreshResponse } from '@/types/auth'
 
 export const authApi = {
   login(credentials: LoginRequest): Promise<AuthResponse> {
@@ -12,9 +12,9 @@ export const authApi = {
       .then((res) => res.data)
   },
 
-  refresh(refreshToken: string): Promise<AuthResponse> {
+  refresh(refreshToken: string): Promise<TokenRefreshResponse> {
     return apiClient
-      .post<AuthResponse>('/auth/refresh', { refreshToken })
+      .post<TokenRefreshResponse>('/auth/refresh', { refreshToken })
       .then((res) => res.data)
   },
 
