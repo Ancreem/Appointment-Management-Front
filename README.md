@@ -446,6 +446,12 @@ Each artifact feeds the next. No phase begins without the previous one being rev
 - **Reduces rework** — catching a design issue in the spec phase costs a fraction of what it costs in code
 - **Traceability** — every line of code maps back to a spec requirement
 
+### AI tools used
+
+The entire SDD process was guided by **gentleman-IA** skills and agents, which structured the exploration, specification, design, task breakdown, implementation, and verification phases.
+
+The project was developed with the assistance of **Claude** (Anthropic) and **opencode** as the primary AI pair-programming tools, working iteratively on code generation, refactoring, testing, and documentation.
+
 ### Process documentation
 
 The `SDD/` directory at the project root contains the complete process trail:
