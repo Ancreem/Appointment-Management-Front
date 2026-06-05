@@ -66,8 +66,24 @@ export default function AppointmentFormPage() {
     loadData()
   }, [loadData])
 
+  function hasChanges(values: CreateAppointmentRequest): boolean {
+    if (!appointment) return true
+    return (
+      values.title !== appointment.title ||
+      (values.description ?? '') !== (appointment.description ?? '') ||
+      values.startTime !== appointment.startTime ||
+      values.endTime !== appointment.endTime ||
+      values.assignedUserId !== appointment.assignedUserId
+    )
+  }
+
   async function handleSubmit(values: CreateAppointmentRequest) {
     if (isEditMode && id) {
+      if (!hasChanges(values)) {
+        toast.info('No changes detected')
+        navigate('/appointments')
+        return
+      }
       await update(id, values)
       toast.success('Appointment updated successfully')
     } else {
