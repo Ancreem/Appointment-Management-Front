@@ -54,6 +54,8 @@ function decodeUserFromAccessToken(token: string): AuthUser {
   return {
     userId: payload['sub'] as string,
     role: payload['role'] as UserRole,
+    email: payload['email'] as string,
+    name: payload['name'] as string,
   }
 }
 
@@ -91,7 +93,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     const response = await authApi.login({ email, password })
     setAccessToken(response.accessToken)
     localStorage.setItem('refreshToken', response.refreshToken)
-    setUser({ userId: response.userId, role: response.role })
+    setUser({
+      userId: response.userId,
+      role: response.role,
+      email: response.email,
+      name: response.name ?? decodeUserFromAccessToken(response.accessToken).name,
+    })
   }, [])
 
   const logout = useCallback(async (): Promise<void> => {

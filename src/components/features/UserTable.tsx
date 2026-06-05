@@ -14,7 +14,7 @@ import {
   TableHead,
   TableRow,
 } from '@mui/material'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { SkeletonTable } from '@/components/ui/SkeletonTable'
 import { EmptyState } from '@/components/ui/EmptyState'
 import type { User } from '@/types/user'
 import type { UserRole } from '@/types/auth'
@@ -36,7 +36,7 @@ const ROLE_LABEL: Record<UserRole, string> = {
 
 export function UserTable({ users, loading = false }: UserTableProps) {
   if (loading) {
-    return <LoadingSpinner />
+    return <SkeletonTable rows={5} columns={3} />
   }
 
   if (users.length === 0) {

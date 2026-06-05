@@ -1,4 +1,3 @@
-import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from '@mui/material/styles'
@@ -15,16 +14,14 @@ if (!container) {
 }
 
 createRoot(container).render(
-  <StrictMode>
-    <BrowserRouter>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <AuthProvider>
-            <AppRouter />
-          </AuthProvider>
-        </LocalizationProvider>
-      </ThemeProvider>
-    </BrowserRouter>
-  </StrictMode>
+  <BrowserRouter>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <AuthProvider>
+          <AppRouter />
+        </AuthProvider>
+      </LocalizationProvider>
+    </ThemeProvider>
+  </BrowserRouter>
 )

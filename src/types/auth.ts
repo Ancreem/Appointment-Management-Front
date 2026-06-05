@@ -16,6 +16,8 @@ export interface AuthResponse {
   tokenType: string
   userId: string
   role: UserRole
+  email: string
+  name: string
 }
 
 export interface TokenRefreshResponse {
@@ -30,4 +32,6 @@ export interface TokenRefreshResponse {
 export interface AuthUser {
   userId: string
   role: UserRole
+  email: string
+  name: string
 }

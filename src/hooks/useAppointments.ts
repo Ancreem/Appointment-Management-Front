@@ -2,6 +2,7 @@
  * useAppointments hook — appointment CRUD operations with loading/error state.
  */
 import { useState, useCallback } from 'react'
+import axios from 'axios'
 import { appointmentsApi } from '@/api/appointments.api'
 import type {
   Appointment,
@@ -69,9 +70,10 @@ export function useAppointments(): UseAppointmentsReturn {
       const created = await appointmentsApi.create(data)
       setState((prev) => ({ ...prev, loading: false, error: null }))
       return created
-    } catch {
-      setError('Failed to create appointment')
-      throw new Error('Failed to create appointment')
+    } catch (err) {
+      const msg = extractMessage(err, 'Failed to create appointment')
+      setError(msg)
+      throw new Error(msg)
     }
   }, [])
 
@@ -82,9 +84,10 @@ export function useAppointments(): UseAppointmentsReturn {
         const updated = await appointmentsApi.update(id, data)
         setState((prev) => ({ ...prev, loading: false, error: null }))
         return updated
-      } catch {
-        setError('Failed to update appointment')
-        throw new Error('Failed to update appointment')
+      } catch (err) {
+        const msg = extractMessage(err, 'Failed to update appointment')
+        setError(msg)
+        throw new Error(msg)
       }
     },
     []
@@ -97,9 +100,10 @@ export function useAppointments(): UseAppointmentsReturn {
         const updated = await appointmentsApi.updateStatus(id, data)
         setState((prev) => ({ ...prev, loading: false, error: null }))
         return updated
-      } catch {
-        setError('Failed to update appointment status')
-        throw new Error('Failed to update appointment status')
+      } catch (err) {
+        const msg = extractMessage(err, 'Failed to update appointment status')
+        setError(msg)
+        throw new Error(msg)
       }
     },
     []
@@ -110,13 +114,22 @@ export function useAppointments(): UseAppointmentsReturn {
     try {
       await appointmentsApi.deleteById(id)
       setState((prev) => ({ ...prev, loading: false, error: null }))
-    } catch {
-      setError('Failed to delete appointment')
-      throw new Error('Failed to delete appointment')
+    } catch (err) {
+      const msg = extractMessage(err, 'Failed to delete appointment')
+      setError(msg)
+      throw new Error(msg)
     }
   }, [])
 
   const clearError = useCallback(() => setError(null), [])
+
+  function extractMessage(err: unknown, fallback: string): string {
+    if (axios.isAxiosError(err)) {
+      const msg = (err.response?.data as { message?: string } | undefined)?.message
+      if (msg) return msg
+    }
+    return fallback
+  }
 
   return {
     ...state,

@@ -24,7 +24,7 @@ import {
 import type { SelectChangeEvent } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { SkeletonTable } from '@/components/ui/SkeletonTable'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { StatusChip } from '@/components/ui/StatusChip'
 import { formatDateTime } from '@/utils/date'
@@ -48,7 +48,7 @@ function getTransitions(status: AppointmentStatus): AppointmentStatus[] {
     case 'CONFIRMED':
       return ['CANCELLED', 'COMPLETED']
     default:
-      // CANCELLED and COMPLETED are terminal — no transitions available
+      // CANCELLED, COMPLETED, DELETED are terminal — no transitions available
       return []
   }
 }
@@ -58,6 +58,7 @@ const TRANSITION_LABEL: Record<AppointmentStatus, string> = {
   CONFIRMED: 'Confirmed',
   CANCELLED: 'Cancelled',
   COMPLETED: 'Completed',
+  DELETED: 'Deleted',
 }
 
 export function AppointmentTable({
@@ -70,7 +71,7 @@ export function AppointmentTable({
   loading = false,
 }: AppointmentTableProps) {
   if (loading) {
-    return <LoadingSpinner />
+    return <SkeletonTable rows={5} columns={6} />
   }
 
   if (appointments.length === 0) {
@@ -105,7 +106,8 @@ export function AppointmentTable({
         <TableBody>
           {appointments.map((appt) => {
             const transitions = getTransitions(appt.status)
-            const canDelete = isAdmin || appt.assignedUserId === currentUserId
+            const isTerminal = appt.status === 'CANCELLED' || appt.status === 'COMPLETED' || appt.status === 'DELETED'
+            const canDelete = !isTerminal && (isAdmin || appt.assignedUserId === currentUserId)
 
             return (
               <TableRow key={appt.id} hover>
@@ -142,14 +144,17 @@ export function AppointmentTable({
                   </Box>
                 </TableCell>
                 <TableCell align="right">
-                  <Tooltip title="Edit">
-                    <IconButton
-                      size="small"
-                      onClick={() => onEdit(appt.id)}
-                      aria-label={`Edit ${appt.title}`}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
+                  <Tooltip title={isTerminal ? 'Cannot edit a completed, cancelled or deleted appointment' : 'Edit'}>
+                    <span>
+                      <IconButton
+                        size="small"
+                        onClick={() => onEdit(appt.id)}
+                        aria-label={`Edit ${appt.title}`}
+                        disabled={isTerminal}
+                      >
+                        <EditIcon fontSize="small" />
+                      </IconButton>
+                    </span>
                   </Tooltip>
                   {canDelete && (
                     <Tooltip title="Delete">

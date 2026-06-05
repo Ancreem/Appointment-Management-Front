@@ -3,7 +3,7 @@
  * Field names match the backend AppointmentResponse DTO exactly.
  */
 
-export type AppointmentStatus = 'SCHEDULED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'
+export type AppointmentStatus = 'SCHEDULED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED' | 'DELETED'
 
 export interface Appointment {
   id: string

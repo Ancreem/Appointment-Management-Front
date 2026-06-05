@@ -13,6 +13,8 @@ import {
   Alert,
   Box,
   Button,
+  Skeleton,
+  Stack,
   Typography,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
@@ -20,7 +22,6 @@ import { useAppointments } from '@/hooks/useAppointments'
 import { useUsers } from '@/hooks/useUsers'
 import { useAuthContext } from '@/context/AuthContext'
 import { AppointmentForm } from '@/components/features/AppointmentForm'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import type { CreateAppointmentRequest } from '@/types/appointment'
 
 export default function AppointmentFormPage() {
@@ -125,7 +126,21 @@ export default function AppointmentFormPage() {
       )}
 
       {showSpinner ? (
-        <LoadingSpinner />
+        <Stack spacing={3}>
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton
+              key={i}
+              animation="wave"
+              variant="rectangular"
+              height={56}
+              sx={{ borderRadius: 1 }}
+            />
+          ))}
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+            <Skeleton animation="wave" variant="rectangular" width={80} height={36} sx={{ borderRadius: 1 }} />
+            <Skeleton animation="wave" variant="rectangular" width={80} height={36} sx={{ borderRadius: 1 }} />
+          </Box>
+        </Stack>
       ) : (
         <AppointmentForm
           initialValues={initialValues}

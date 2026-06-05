@@ -7,13 +7,14 @@
  *  - Edit, delete, status-change actions
  *  - Delete requires confirmation via ConfirmDialog
  */
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Alert,
   Box,
   Button,
   Pagination,
+  Snackbar,
   Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
@@ -21,8 +22,7 @@ import { useAppointments } from '@/hooks/useAppointments'
 import { useAuthContext } from '@/context/AuthContext'
 import { AppointmentFiltersBar } from '@/components/features/AppointmentFiltersBar'
 import { AppointmentTable } from '@/components/features/AppointmentTable'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import type { AppointmentStatus } from '@/types/appointment'
+import type { Appointment, AppointmentStatus } from '@/types/appointment'
 
 const PAGE_SIZE = 10
 
@@ -40,9 +40,10 @@ export default function AppointmentsPage() {
   // Pagination state
   const [page, setPage] = useState(1) // MUI Pagination is 1-based
 
-  // Delete confirmation state
-  const [deleteId, setDeleteId] = useState<string | null>(null)
-  const [deleteLoading, setDeleteLoading] = useState(false)
+  // Soft-delete + undo state
+  const [pendingCancel, setPendingCancel] = useState<Appointment | null>(null)
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const UNDO_MS = 5000
 
   const isAdmin = user?.role === 'ADMIN'
   const currentUserId = user?.userId ?? ''
@@ -98,21 +99,35 @@ export default function AppointmentsPage() {
   }
 
   function handleDeleteRequest(id: string) {
-    setDeleteId(id)
+    const target = rows.find((a) => a.id === id)
+    if (!target) return
+
+    // Clear any in-flight undo timer (edge case: two deletions in a row)
+    if (undoTimer.current) {
+      clearTimeout(undoTimer.current)
+      // Commit the previous pending cancel before starting a new one
+      if (pendingCancel) {
+        void updateStatus(pendingCancel.id, { status: 'DELETED' }).then(load)
+      }
+    }
+
+    setPendingCancel(target)
+
+    undoTimer.current = setTimeout(() => {
+      // Timer expired — commit the soft delete
+      void updateStatus(target.id, { status: 'DELETED' }).then(load)
+      setPendingCancel(null)
+      undoTimer.current = null
+    }, UNDO_MS)
   }
 
-  async function handleDeleteConfirm() {
-    if (!deleteId) return
-    setDeleteLoading(true)
-    try {
-      await remove(deleteId)
-      setDeleteId(null)
-      load()
-    } catch {
-      // error already set in hook
-    } finally {
-      setDeleteLoading(false)
+  function handleUndo() {
+    if (undoTimer.current) {
+      clearTimeout(undoTimer.current)
+      undoTimer.current = null
     }
+    setPendingCancel(null)
+    // No API call — nothing was sent to the backend yet
   }
 
   async function handleStatusChange2(id: string, newStatus: AppointmentStatus) {
@@ -125,7 +140,8 @@ export default function AppointmentsPage() {
   }
 
   const totalPages = appointments ? appointments.totalPages : 0
-  const rows = appointments?.content ?? []
+  // Hide the pending-cancel row immediately (optimistic update)
+  const rows = (appointments?.content ?? []).filter((a) => a.id !== pendingCancel?.id)
 
   return (
     <Box>
@@ -183,15 +199,22 @@ export default function AppointmentsPage() {
         </Box>
       )}
 
-      {/* Delete confirmation */}
-      <ConfirmDialog
-        open={deleteId !== null}
-        title="Delete Appointment"
-        message="Are you sure you want to delete this appointment? This action cannot be undone."
-        onConfirm={() => void handleDeleteConfirm()}
-        onCancel={() => setDeleteId(null)}
-        confirmLoading={deleteLoading}
-        confirmColor="error"
+      {/* Undo snackbar — shown for UNDO_MS ms after a soft delete */}
+      <Snackbar
+        open={pendingCancel !== null}
+        message={`"${pendingCancel?.title}" cancelled`}
+        autoHideDuration={UNDO_MS}
+        onClose={(_, reason) => {
+          // autoHideDuration fires onClose with reason='timeout' — commit is
+          // already handled by the setTimeout in handleDeleteRequest.
+          if (reason === 'timeout') setPendingCancel(null)
+        }}
+        action={
+          <Button color="secondary" size="small" onClick={handleUndo}>
+            UNDO
+          </Button>
+        }
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </Box>
   )

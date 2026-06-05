@@ -19,7 +19,7 @@ import {
 import AddIcon from '@mui/icons-material/Add'
 import { appointmentsApi } from '@/api/appointments.api'
 import { useAuthContext } from '@/context/AuthContext'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import { StatCardSkeleton } from '@/components/ui/StatCardSkeleton'
 
 interface Stats {
   total: number
@@ -67,7 +67,7 @@ export default function DashboardPage() {
     return () => { cancelled = true }
   }, [])
 
-  const displayName = user?.userId ?? 'there'
+  const displayName = user?.name ?? user?.email ?? 'there'
 
   return (
     <Box>
@@ -100,21 +100,29 @@ export default function DashboardPage() {
         </Alert>
       )}
 
-      {loading ? (
-        <LoadingSpinner />
-      ) : (
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={4}>
+      <Grid container spacing={3}>
+        <Grid item xs={12} sm={4}>
+          {loading ? (
+            <StatCardSkeleton />
+          ) : (
             <StatCard label="Total Appointments" value={stats?.total ?? 0} color="primary.main" />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <StatCard label="Upcoming (Scheduled)" value={stats?.scheduled ?? 0} color="warning.main" />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <StatCard label="Confirmed" value={stats?.confirmed ?? 0} color="success.main" />
-          </Grid>
+          )}
         </Grid>
-      )}
+        <Grid item xs={12} sm={4}>
+          {loading ? (
+            <StatCardSkeleton />
+          ) : (
+            <StatCard label="Upcoming (Scheduled)" value={stats?.scheduled ?? 0} color="warning.main" />
+          )}
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          {loading ? (
+            <StatCardSkeleton />
+          ) : (
+            <StatCard label="Confirmed" value={stats?.confirmed ?? 0} color="success.main" />
+          )}
+        </Grid>
+      </Grid>
     </Box>
   )
 }
