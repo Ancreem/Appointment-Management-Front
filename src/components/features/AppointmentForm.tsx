@@ -43,12 +43,27 @@ interface FormErrors {
 }
 
 /**
- * Converts an ISO-8601 string (e.g. "2026-06-05T10:00:00Z") to the
- * datetime-local input format ("2026-06-05T10:00").
+ * Converts a UTC ISO-8601 string to the datetime-local input format in LOCAL time.
+ * e.g. "2026-06-05T20:06:00Z" → "2026-06-05T15:06" (in UTC-5)
  */
 function isoToDatetimeLocal(iso: string): string {
   if (!iso) return ''
-  return iso.slice(0, 16)
+  const date = new Date(iso)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
+
+/**
+ * Converts a datetime-local value (treated as LOCAL time) to a UTC ISO string.
+ * e.g. "2026-06-05T15:06" → "2026-06-05T20:06:00.000Z" (in UTC-5)
+ */
+function datetimeLocalToIso(local: string): string {
+  if (!local) return ''
+  return new Date(local).toISOString()
 }
 
 export function AppointmentForm({
@@ -107,10 +122,8 @@ export function AppointmentForm({
     await onSubmit({
       title: title.trim(),
       description: description.trim() || undefined,
-      // datetime-local values lack timezone; append :00Z so the backend
-      // receives a valid OffsetDateTime string.
-      startTime: startTime ? `${startTime}:00Z` : '',
-      endTime: endTime ? `${endTime}:00Z` : '',
+      startTime: datetimeLocalToIso(startTime),
+      endTime: datetimeLocalToIso(endTime),
       assignedUserId: isAdmin ? assignedUserId : currentUserId,
     })
   }

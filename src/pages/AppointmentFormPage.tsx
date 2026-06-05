@@ -68,11 +68,13 @@ export default function AppointmentFormPage() {
 
   function hasChanges(values: CreateAppointmentRequest): boolean {
     if (!appointment) return true
+    const sameTime = (a: string, b: string) =>
+      new Date(a).getTime() === new Date(b).getTime()
     return (
       values.title !== appointment.title ||
       (values.description ?? '') !== (appointment.description ?? '') ||
-      values.startTime !== appointment.startTime ||
-      values.endTime !== appointment.endTime ||
+      !sameTime(values.startTime, appointment.startTime) ||
+      !sameTime(values.endTime, appointment.endTime) ||
       values.assignedUserId !== appointment.assignedUserId
     )
   }
