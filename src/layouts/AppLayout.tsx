@@ -20,7 +20,11 @@ import DashboardIcon from '@mui/icons-material/Dashboard'
 import EventNoteIcon from '@mui/icons-material/EventNote'
 import PeopleIcon from '@mui/icons-material/People'
 import LogoutIcon from '@mui/icons-material/Logout'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import IconButton from '@mui/material/IconButton'
 import { useAuthContext } from '@/context/AuthContext'
+import { useColorMode } from '@/context/ColorModeContext'
 
 const DRAWER_WIDTH = 240
 
@@ -39,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function AppLayout() {
   const { user, logout } = useAuthContext()
+  const { mode, toggleColorMode } = useColorMode()
   const isAdmin = user?.role === 'ADMIN'
 
   const handleLogout = () => {
@@ -59,6 +64,9 @@ export function AppLayout() {
             Appointment Manager
           </Typography>
 
+          <IconButton color="inherit" onClick={toggleColorMode} sx={{ mr: 1 }}>
+            {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+          </IconButton>
           <Button
             color="inherit"
             startIcon={<LogoutIcon />}

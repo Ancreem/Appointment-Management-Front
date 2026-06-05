@@ -1,12 +1,10 @@
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { ThemeProvider } from '@mui/material/styles'
-import CssBaseline from '@mui/material/CssBaseline'
 import { LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
+import { ColorModeProvider } from '@/context/ColorModeContext'
 import { AuthProvider } from '@/context/AuthContext'
 import { AppRouter } from '@/routes/AppRouter'
-import { theme } from '@/theme/theme'
 
 const container = document.getElementById('root')
 if (!container) {
@@ -15,13 +13,12 @@ if (!container) {
 
 createRoot(container).render(
   <BrowserRouter>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
+    <ColorModeProvider>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <AuthProvider>
           <AppRouter />
         </AuthProvider>
       </LocalizationProvider>
-    </ThemeProvider>
+    </ColorModeProvider>
   </BrowserRouter>
 )
