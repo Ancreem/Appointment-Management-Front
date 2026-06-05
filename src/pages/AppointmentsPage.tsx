@@ -15,7 +15,6 @@ import {
   Box,
   Button,
   Pagination,
-  Snackbar,
   Typography,
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
@@ -44,6 +43,7 @@ export default function AppointmentsPage() {
   // Soft-delete + undo state
   const [pendingCancel, setPendingCancel] = useState<Appointment | null>(null)
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const toastId = useRef<string | number | null>(null)
   const UNDO_MS = 5000
 
   const isAdmin = user?.role === 'ADMIN'
@@ -99,26 +99,37 @@ export default function AppointmentsPage() {
     navigate(`/appointments/${id}/edit`)
   }
 
+  function commitDelete(target: Appointment) {
+    void updateStatus(target.id, { status: 'DELETED' }).then(load)
+    setPendingCancel(null)
+    undoTimer.current = null
+  }
+
   function handleDeleteRequest(id: string) {
     const target = rows.find((a) => a.id === id)
     if (!target) return
 
-    // Clear any in-flight undo timer (edge case: two deletions in a row)
+    // If another delete is in flight, commit it first
     if (undoTimer.current) {
       clearTimeout(undoTimer.current)
-      // Commit the previous pending cancel before starting a new one
-      if (pendingCancel) {
-        void updateStatus(pendingCancel.id, { status: 'DELETED' }).then(load)
-      }
+      if (pendingCancel) commitDelete(pendingCancel)
     }
+
+    // Dismiss previous toast
+    if (toastId.current) toast.dismiss(toastId.current)
 
     setPendingCancel(target)
 
+    toastId.current = toast(`"${target.title}" will be deleted`, {
+      duration: UNDO_MS,
+      action: {
+        label: 'Undo',
+        onClick: () => handleUndo(),
+      },
+    })
+
     undoTimer.current = setTimeout(() => {
-      // Timer expired — commit the soft delete
-      void updateStatus(target.id, { status: 'DELETED' }).then(load)
-      setPendingCancel(null)
-      undoTimer.current = null
+      commitDelete(target)
     }, UNDO_MS)
   }
 
@@ -127,8 +138,12 @@ export default function AppointmentsPage() {
       clearTimeout(undoTimer.current)
       undoTimer.current = null
     }
+    if (toastId.current) {
+      toast.dismiss(toastId.current)
+      toastId.current = null
+    }
     setPendingCancel(null)
-    // No API call — nothing was sent to the backend yet
+    toast.success('Deletion cancelled')
   }
 
   async function handleStatusChange2(id: string, newStatus: AppointmentStatus) {
@@ -201,23 +216,6 @@ export default function AppointmentsPage() {
         </Box>
       )}
 
-      {/* Undo snackbar — shown for UNDO_MS ms after a soft delete */}
-      <Snackbar
-        open={pendingCancel !== null}
-        message={`"${pendingCancel?.title}" cancelled`}
-        autoHideDuration={UNDO_MS}
-        onClose={(_, reason) => {
-          // autoHideDuration fires onClose with reason='timeout' — commit is
-          // already handled by the setTimeout in handleDeleteRequest.
-          if (reason === 'timeout') setPendingCancel(null)
-        }}
-        action={
-          <Button color="secondary" size="small" onClick={handleUndo}>
-            UNDO
-          </Button>
-        }
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      />
     </Box>
   )
 }
