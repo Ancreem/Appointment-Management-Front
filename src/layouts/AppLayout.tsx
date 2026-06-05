@@ -25,6 +25,7 @@ import LightModeIcon from '@mui/icons-material/LightMode'
 import IconButton from '@mui/material/IconButton'
 import { useAuthContext } from '@/context/AuthContext'
 import { useColorMode } from '@/context/ColorModeContext'
+import { toast } from 'sonner'
 
 const DRAWER_WIDTH = 240
 
@@ -47,6 +48,7 @@ export function AppLayout() {
   const isAdmin = user?.role === 'ADMIN'
 
   const handleLogout = () => {
+    toast.success('See you soon!')
     void logout()
   }
 

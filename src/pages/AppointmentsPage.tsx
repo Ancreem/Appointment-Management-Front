@@ -9,6 +9,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
   Alert,
   Box,
@@ -133,6 +134,7 @@ export default function AppointmentsPage() {
   async function handleStatusChange2(id: string, newStatus: AppointmentStatus) {
     try {
       await updateStatus(id, { status: newStatus })
+      toast.success(`Status changed to ${newStatus.toLowerCase()}`)
       load()
     } catch {
       // error already set in hook

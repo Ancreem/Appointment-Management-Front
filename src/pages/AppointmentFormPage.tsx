@@ -9,6 +9,7 @@
  */
 import { useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import {
   Alert,
   Box,
@@ -68,8 +69,10 @@ export default function AppointmentFormPage() {
   async function handleSubmit(values: CreateAppointmentRequest) {
     if (isEditMode && id) {
       await update(id, values)
+      toast.success('Appointment updated successfully')
     } else {
       await create(values)
+      toast.success('Appointment created successfully')
     }
     navigate('/appointments')
   }
